@@ -16,9 +16,20 @@ class CityScene extends Phaser.Scene {
     if (direction) this.onMove(direction);
   };
 
+  private readonly handlePointerUp = (pointer: Phaser.Input.Pointer) => {
+    if (!this.currentState || this.disposed || !this.ready) return;
+    const targetX = Math.floor(pointer.worldX / TILE);
+    const targetY = Math.floor(pointer.worldY / TILE);
+    const dx = targetX - this.currentState.player.x;
+    const dy = targetY - this.currentState.player.y;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    this.onMove(Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+  };
+
   private readonly handleShutdown = () => {
     this.ready = false;
     this.input?.keyboard?.off("keydown", this.handleKeyDown);
+    this.input?.off("pointerup", this.handlePointerUp);
   };
 
   private readonly handleDestroy = () => {
@@ -37,6 +48,9 @@ class CityScene extends Phaser.Scene {
     }
     const keys = this.input.keyboard!.addKeys("W,A,S,D,UP,DOWN,LEFT,RIGHT") as Record<string, Phaser.Input.Keyboard.Key>;
     void keys;
+
+    this.input.off("pointerup", this.handlePointerUp);
+    this.input.on("pointerup", this.handlePointerUp);
 
     const keyboard = this.input.keyboard!;
     keyboard.off("keydown", this.handleKeyDown);

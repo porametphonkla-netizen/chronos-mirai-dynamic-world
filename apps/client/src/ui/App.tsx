@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { WorldView } from "@chronos/contracts";
 import { GameCanvas } from "../game/GameCanvas.js";
 
@@ -7,6 +7,28 @@ const API = import.meta.env.VITE_API_URL ?? "/api";
 const key = "chronos.local-worlds";
 function savedWorlds(): SavedWorld[] { try { return JSON.parse(localStorage.getItem(key) ?? "[]") as SavedWorld[]; } catch { return []; } }
 function money(minor:number) { return new Intl.NumberFormat("th-TH", { style:"currency",currency:"THB",maximumFractionDigits:2 }).format(minor / 100); }
+
+type Direction = "up"|"down"|"left"|"right";
+function TouchJoystick({ disabled, onMove }: { disabled:boolean; onMove:(direction:Direction)=>void }) {
+  const activeDirection = useRef<Direction|null>(null);
+  const getDirection = (event:React.PointerEvent<HTMLDivElement>):Direction|null => {
+    const rect=event.currentTarget.getBoundingClientRect();
+    const dx=event.clientX-(rect.left+rect.width/2);
+    const dy=event.clientY-(rect.top+rect.height/2);
+    if(Math.hypot(dx,dy)<12) return null;
+    return Math.abs(dx)>Math.abs(dy) ? (dx>0?"right":"left") : (dy>0?"down":"up");
+  };
+  const update=(event:React.PointerEvent<HTMLDivElement>)=>{
+    if(disabled) return;
+    const next=getDirection(event);
+    if(next && next!==activeDirection.current){activeDirection.current=next;onMove(next);}
+    if(!next) activeDirection.current=null;
+  };
+  const stop=()=>{activeDirection.current=null;};
+  return <div className="touch-joystick" role="group" aria-label="จอยสติ๊กควบคุมการเดิน" onPointerDown={event=>{event.currentTarget.setPointerCapture(event.pointerId);update(event);}} onPointerMove={update} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}>
+    <span className="joystick-arrow up">↑</span><span className="joystick-arrow left">←</span><span className="joystick-arrow center">●</span><span className="joystick-arrow right">→</span><span className="joystick-arrow down">↓</span>
+  </div>;
+}
 
 export function App() {
   const [worlds,setWorlds] = useState(savedWorlds);
@@ -55,7 +77,7 @@ export function App() {
   const nearShop=world.state.buildings.some(b=>b.kind==="shop"&&Math.abs(world.state.player.x-b.x)<=4&&Math.abs(world.state.player.y-b.y)<=4);
   const shop=world.state.shop;
   return <main className="game-shell"><header className="topbar"><div><span className="brand-mark small">C × M</span><div><strong>{world.name}</strong><small>REVISION {world.currentRevision} · WORLD PAUSED</small></div></div><button className="quiet" onClick={()=>{setActive(null);setWorld(null);}}>ออกจากโลก</button></header>
-    <section className="world-layout"><div className="game-column"><div className="section-heading"><div><p className="eyebrow">เมืองจำลอง · วันที่ {shop?.day ?? 1} · {shop?.hour ?? 8}:00</p><h1>ชีวิตในเมือง</h1></div><span className="status-pill">● บันทึกแล้ว</span></div><GameCanvas state={world.state} onMove={move}/><div className="controls"><span>เคลื่อนที่</span>{(["up","left","down","right"] as const).map(d=><button key={d} aria-label={d} onClick={()=>void sendCommand({type:"move",direction:d})}>{({up:"↑",down:"↓",left:"←",right:"→"})[d]}</button>)}<small>ใช้ปุ่มลูกศรหรือ WASD ได้ด้วย</small></div></div>
+    <section className="world-layout"><div className="game-column"><div className="section-heading"><div><p className="eyebrow">เมืองจำลอง · วันที่ {shop?.day ?? 1} · {shop?.hour ?? 8}:00</p><h1>ชีวิตในเมือง</h1></div><span className="status-pill">● บันทึกแล้ว</span></div><GameCanvas state={world.state} onMove={move}/><div className="mobile-controls"><TouchJoystick disabled={busy} onMove={move}/><div className="mobile-control-hint">ลากจอยสติ๊กเพื่อเดิน หรือแตะพื้นที่บนแผนที่เพื่อเดิน 1 ช่อง</div></div><div className="controls"><span>เคลื่อนที่</span>{(["up","left","down","right"] as const).map(d=><button key={d} aria-label={d} onClick={()=>void sendCommand({type:"move",direction:d})}>{({up:"↑",down:"↓",left:"←",right:"→"})[d]}</button>)}<small>แตะปุ่มบนหน้าจอ หรือใช้ปุ่มลูกศรและ WASD</small></div></div>
     <aside className="panel"><p className="eyebrow">ธุรกิจของคุณ</p><h2>{shop?"ร้านค้าทั่วไป":"เริ่มต้นกิจการ"}</h2>{!shop?<><p className="muted">เลือกเงินทุนตั้งต้นสำหรับร้านของคุณ</p><label>ทุนตั้งต้น: {money(capital)}<input type="range" min="10000" max="1000000" step="10000" value={capital} onChange={e=>setCapital(Number(e.target.value))}/></label><button disabled={busy} onClick={()=>void sendCommand({type:"create-business",businessType:"general-store",capitalMinor:capital})}>เปิดร้าน</button></>:<><div className="balance"><span>เงินสด</span><strong>{money(shop.cashMinor)}</strong></div><div className="product-row"><div><strong>ขนมปัง</strong><small>ซื้อ {money(250)} · ขาย {money(400)} · คงเหลือ {shop.inventory.bread}</small></div><button disabled={busy||!nearShop} onClick={()=>void sendCommand({type:"buy-stock",productId:"bread",quantity:1})}>ซื้อ 1</button><button className="secondary" disabled={busy||shop.inventory.bread<1} onClick={()=>void sendCommand({type:"sell-product",productId:"bread",quantity:1})}>ขาย 1</button></div><div className="product-row"><div><strong>ชา</strong><small>ซื้อ {money(500)} · ขาย {money(800)} · คงเหลือ {shop.inventory.tea}</small></div><button disabled={busy||!nearShop} onClick={()=>void sendCommand({type:"buy-stock",productId:"tea",quantity:1})}>ซื้อ 1</button><button className="secondary" disabled={busy||shop.inventory.tea<1} onClick={()=>void sendCommand({type:"sell-product",productId:"tea",quantity:1})}>ขาย 1</button></div><p className="hint">{nearShop?"อยู่ใกล้ร้านค้า ซื้อสินค้าเข้าสต็อกได้":"เดินเข้าใกล้ร้านค้าเพื่อซื้อสินค้า"}</p></>}
     <hr/><p className="eyebrow">เวลาในเมือง</p><p className="muted">วันที่ {shop?.day ?? 1} · {String(shop?.hour ?? 8).padStart(2,"0")}:00 · {((shop?.hour ?? 8) >= 6 && (shop?.hour ?? 8) < 18)?"กลางวัน":"กลางคืน"}. โลกหยุดเมื่อคุณออก</p><div className="time-controls"><button className="secondary" disabled={busy||!shop} onClick={()=>void sendCommand({type:"advance-time",hours:4})}>+4 ชั่วโมง</button><button className="secondary" disabled={busy||!shop} onClick={()=>void sendCommand({type:"advance-day",days:1})}>+1 วัน</button></div><div className="callout"><strong>CHRONOS</strong><span>การตัดสินใจสำคัญจะถูกบันทึกในประวัติ</span></div></aside></section>
     {message&&<div className="toast" role="alert">{message}<button onClick={()=>setMessage("")}>ปิด</button></div>}

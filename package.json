@@ -1,0 +1,14 @@
+{
+  "name": "chronos-mirai",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.6.5",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @chronos/server --filter @chronos/client dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "db:migrate": "pnpm --filter @chronos/server db:migrate"
+  },
+  "engines": { "node": ">=22" }
+}

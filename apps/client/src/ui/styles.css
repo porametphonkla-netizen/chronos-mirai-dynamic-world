@@ -62,3 +62,20 @@ input,button{-webkit-appearance:none}
   .panel{padding:12px}
 }
 @media(prefers-reduced-motion:reduce){button{transition:none}}
+
+
+/* Touch controls: joystick and map tap affordance. */
+.mobile-controls{display:none}
+@media(max-width:850px){
+  .mobile-controls{display:flex;align-items:center;gap:14px;margin:12px 0 4px}
+  .touch-joystick{position:relative;flex:0 0 116px;width:116px;height:116px;border:1px solid #627767;border-radius:50%;background:radial-gradient(circle,#344b40 0 27%,#263b32 28% 62%,#1a2924 63%);box-shadow:inset 0 0 0 5px #1b2c25,0 5px 18px #0005;touch-action:none;user-select:none;-webkit-user-select:none}
+  .joystick-arrow{position:absolute;display:grid;place-items:center;width:27px;height:27px;color:#e8e4d7;font-size:17px;font-weight:700;pointer-events:none}
+  .joystick-arrow.up{top:5px;left:calc(50% - 13px)}
+  .joystick-arrow.down{bottom:5px;left:calc(50% - 13px)}
+  .joystick-arrow.left{left:5px;top:calc(50% - 13px)}
+  .joystick-arrow.right{right:5px;top:calc(50% - 13px)}
+  .joystick-arrow.center{left:calc(50% - 13px);top:calc(50% - 13px);color:#d8be86;font-size:14px}
+  .mobile-control-hint{max-width:220px;color:#a6b2a8;font-size:11px;line-height:1.6}
+}
+@media(max-width:600px){.mobile-controls{justify-content:flex-start;padding:0 4px}.touch-joystick{width:108px;height:108px;flex-basis:108px}}
+@media(orientation:landscape) and (max-height:520px){.mobile-controls{margin:5px 0}.touch-joystick{width:88px;height:88px;flex-basis:88px}.joystick-arrow.up{top:2px}.joystick-arrow.down{bottom:2px}.joystick-arrow.left{left:2px}.joystick-arrow.right{right:2px}}

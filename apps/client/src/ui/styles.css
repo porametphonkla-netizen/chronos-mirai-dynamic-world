@@ -79,3 +79,37 @@ input,button{-webkit-appearance:none}
 }
 @media(max-width:600px){.mobile-controls{justify-content:flex-start;padding:0 4px}.touch-joystick{width:108px;height:108px;flex-basis:108px}}
 @media(orientation:landscape) and (max-height:520px){.mobile-controls{margin:5px 0}.touch-joystick{width:88px;height:88px;flex-basis:88px}.joystick-arrow.up{top:2px}.joystick-arrow.down{bottom:2px}.joystick-arrow.left{left:2px}.joystick-arrow.right{right:2px}}
+
+
+/* Mission 008.2: prioritize touch-first controls on phones. */
+@media(max-width:850px){
+  .controls{display:none!important}
+  .mobile-controls{gap:16px;align-items:center;margin:14px 0 8px}
+  .touch-joystick{flex-basis:120px;width:120px;height:120px}
+  .mobile-control-hint{font-size:13px;line-height:1.7;max-width:230px}
+  .section-heading h1{font-size:24px}
+  .section-heading .eyebrow{font-size:11px;letter-spacing:.4px}
+  .status-pill{font-size:12px}
+  .panel{font-size:14px}
+  .panel h2{font-size:21px}
+  .balance span{font-size:14px}
+  .balance strong{font-size:20px}
+  .product-row strong{font-size:14px}
+  .product-row small{font-size:12px;line-height:1.55}
+  .product-row button{font-size:12px;min-height:46px}
+  .hint,.panel>.muted{font-size:13px}
+  .time-controls button{font-size:13px;min-height:48px}
+  .callout span{font-size:12px;line-height:1.5}
+}
+@media(max-width:380px){
+  .mobile-controls{gap:12px}
+  .touch-joystick{flex-basis:108px;width:108px;height:108px}
+  .mobile-control-hint{font-size:12px}
+}
+@media(orientation:landscape) and (max-height:520px) and (max-width:850px){
+  .mobile-controls{margin:6px 0}
+  .touch-joystick{flex-basis:88px;width:88px;height:88px}
+  .mobile-control-hint{font-size:11px;max-width:180px}
+  .panel{font-size:12px}
+  .product-row small{font-size:10px}
+}

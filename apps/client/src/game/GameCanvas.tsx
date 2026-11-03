@@ -77,6 +77,7 @@ class CityScene extends Phaser.Scene {
     this.disposed = true;
     this.ready = false;
     this.input?.keyboard?.off("keydown", this.handleKeyDown);
+    this.input?.off("pointerup", this.handlePointerUp);
   }
 
   private drawWorld() {
